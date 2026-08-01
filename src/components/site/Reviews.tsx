@@ -1,44 +1,26 @@
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const reviews = [
-  {
-    name: "Anna K.",
-    country: "Germany",
-    text: "Beautiful, clean apartment in a quiet neighborhood — and the beach is literally a few minutes away. Luka was an incredible host.",
-    stay: "Stayed in July",
-  },
-  {
-    name: "Marko P.",
-    country: "Serbia",
-    text: "Tiho mesto, savršeno za odmor. Sve je novo i čisto, parking u dvorištu — preporuka od srca.",
-    stay: "Stayed in August",
-  },
-  {
-    name: "Elena R.",
-    country: "Russia",
-    text: "Очень уютная квартира с прекрасной террасой. Хозяин отзывчивый, говорит по-русски. Вернёмся снова!",
-    stay: "Stayed in June",
-  },
-  {
-    name: "James W.",
-    country: "United Kingdom",
-    text: "Exactly as pictured. Spotless, well-equipped kitchen, fast Wi-Fi, and the location is hard to beat for the price.",
-    stay: "Stayed in September",
-  },
+  { name: "Anna K.", i: 0 },
+  { name: "Marko P.", i: 1 },
+  { name: "Elena R.", i: 2 },
+  { name: "James W.", i: 3 },
 ];
 
 export function Reviews() {
+  const { t } = useLanguage();
   return (
     <section id="reviews" className="py-24 md:py-32 bg-secondary">
       <div className="mx-auto max-w-7xl container-px">
         <div className="flex items-end justify-between gap-8 mb-12">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">
-              Guest stories
+              {t("reviews.eyebrow")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-balance max-w-2xl">
-              What our guests say.
+              {t("reviews.title")}
             </h2>
           </div>
           <div className="hidden md:flex items-center gap-3">
@@ -47,7 +29,7 @@ export function Reviews() {
                 <Star key={i} className="size-5 fill-sand text-sand" />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground">Trusted by guests since 2022</span>
+            <span className="text-sm text-muted-foreground">{t("reviews.trusted")}</span>
           </div>
         </div>
 
@@ -68,7 +50,7 @@ export function Reviews() {
                 ))}
               </div>
               <blockquote className="text-lg leading-relaxed text-foreground/90">
-                “{r.text}”
+                “{t(`reviews.${r.i}.text`)}”
               </blockquote>
               <figcaption className="mt-6 flex items-center gap-3">
                 <div className="size-10 rounded-full bg-sand/40 grid place-items-center font-display text-lg">
@@ -76,7 +58,9 @@ export function Reviews() {
                 </div>
                 <div>
                   <div className="font-medium">{r.name}</div>
-                  <div className="text-xs text-muted-foreground">{r.country} · {r.stay}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t(`reviews.${r.i}.country`)} · {t(`reviews.${r.i}.stay`)}
+                  </div>
                 </div>
               </figcaption>
             </motion.figure>

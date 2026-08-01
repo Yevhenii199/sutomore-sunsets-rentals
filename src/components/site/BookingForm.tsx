@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format, differenceInCalendarDays } from "date-fns";
+import { enUS, ru as ruLocale, srLatn } from "date-fns/locale";
 import { CalendarIcon, Loader2, Check } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -11,20 +12,25 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { property } from "@/lib/property";
+import { useLanguage } from "@/context/LanguageContext";
 
-const schema = z.object({
-  name: z.string().trim().min(2, "Please enter your name").max(80),
-  phone: z.string().trim().min(5, "Please enter a phone number").max(40),
-  guests: z.coerce.number().int().min(1).max(8),
-  checkIn: z.date({ message: "Pick a check-in date" }),
-  checkOut: z.date({ message: "Pick a check-out date" }),
-  notes: z.string().max(500).optional(),
-}).refine((d) => d.checkOut > d.checkIn, {
-  message: "Check-out must be after check-in",
-  path: ["checkOut"],
-});
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().trim().min(2, t("book.errName")).max(80),
+    phone: z.string().trim().min(5, t("book.errPhone")).max(40),
+    guests: z.coerce.number().int().min(1).max(8),
+    checkIn: z.date({ message: t("book.errCheckIn") }),
+    checkOut: z.date({ message: t("book.errCheckOut") }),
+    notes: z.string().max(500).optional(),
+  }).refine((d) => d.checkOut > d.checkIn, {
+    message: t("book.errOrder"),
+    path: ["checkOut"],
+  });
 
 export function BookingForm() {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "ru" ? ruLocale : language === "sr" ? srLatn : enUS;
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState("2");
@@ -40,19 +46,18 @@ export function BookingForm() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ name, phone, guests, checkIn, checkOut, notes });
+    const parsed = makeSchema(t).safeParse({ name, phone, guests, checkIn, checkOut, notes });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      toast.error(parsed.error.issues[0]?.message ?? t("book.errGeneric"));
       return;
     }
     setLoading(true);
     try {
-      // TODO: Wire to /api/public/booking endpoint that forwards to Telegram bot.
       await new Promise((r) => setTimeout(r, 900));
       setDone(true);
-      toast.success("Request sent! The host will contact you shortly.");
+      toast.success(t("book.toastSuccess"));
     } catch {
-      toast.error("Could not send request. Please try again.");
+      toast.error(t("book.toastError"));
     } finally {
       setLoading(false);
     }
@@ -64,28 +69,30 @@ export function BookingForm() {
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5">
             <p className="text-xs uppercase tracking-[0.25em] text-background/60 mb-3">
-              Reserve your stay
+              {t("book.eyebrow")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-balance">
-              Send a request, get a reply in hours.
+              {t("book.title")}
             </h2>
             <p className="mt-6 text-background/70 text-lg max-w-md">
-              Tell us when you&apos;d like to come. We&apos;ll confirm availability and walk you through everything you need to know.
+              {t("book.subtitle")}
             </p>
 
             <div className="mt-10 space-y-4 text-background/80">
               <div className="flex items-baseline justify-between border-b border-background/15 pb-3">
-                <span>Price per night</span>
+                <span>{t("book.pricePerNight")}</span>
                 <span className="font-display text-2xl text-background">€{property.pricePerNight}</span>
               </div>
               {nights > 0 && (
                 <>
                   <div className="flex items-baseline justify-between text-sm">
-                    <span>{nights} {nights === 1 ? "night" : "nights"}</span>
+                    <span>
+                      {nights} {nights === 1 ? t("common.nights_one") : t("common.nights_other")}
+                    </span>
                     <span>€{total}</span>
                   </div>
                   <div className="flex items-baseline justify-between border-t border-background/15 pt-3">
-                    <span>Estimated total</span>
+                    <span>{t("book.estimatedTotal")}</span>
                     <span className="font-display text-3xl text-sand">€{total}</span>
                   </div>
                 </>
@@ -102,29 +109,30 @@ export function BookingForm() {
                 <div className="mx-auto size-14 rounded-full bg-sand/30 grid place-items-center mb-5">
                   <Check className="size-7" />
                 </div>
-                <h3 className="font-display text-3xl">Request sent</h3>
+                <h3 className="font-display text-3xl">{t("book.sentTitle")}</h3>
                 <p className="mt-3 text-muted-foreground max-w-sm mx-auto">
-                  Thank you, {name.split(" ")[0]}. The host will contact you on {phone} shortly.
+                  {t("book.sentBody", { name: name.split(" ")[0], phone })}
                 </p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="mt-2 h-11" />
+                  <Label htmlFor="name">{t("book.name")}</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("book.namePlaceholder")} className="mt-2 h-11" />
                 </div>
 
                 <div>
-                  <Label>Check-in</Label>
+                  <Label>{t("book.checkIn")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("mt-2 w-full h-11 justify-start font-normal", !checkIn && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 size-4" />
-                        {checkIn ? format(checkIn, "PPP") : "Pick a date"}
+                        {checkIn ? format(checkIn, "PPP", { locale: dateLocale }) : t("book.pickDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={checkIn} onSelect={setCheckIn}
+                        locale={dateLocale}
                         disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))}
                         className="p-3 pointer-events-auto" />
                     </PopoverContent>
@@ -132,16 +140,17 @@ export function BookingForm() {
                 </div>
 
                 <div>
-                  <Label>Check-out</Label>
+                  <Label>{t("book.checkOut")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("mt-2 w-full h-11 justify-start font-normal", !checkOut && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 size-4" />
-                        {checkOut ? format(checkOut, "PPP") : "Pick a date"}
+                        {checkOut ? format(checkOut, "PPP", { locale: dateLocale }) : t("book.pickDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={checkOut} onSelect={setCheckOut}
+                        locale={dateLocale}
                         disabled={(d) => !checkIn || d <= checkIn}
                         className="p-3 pointer-events-auto" />
                     </PopoverContent>
@@ -149,26 +158,26 @@ export function BookingForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="guests">Guests</Label>
+                  <Label htmlFor="guests">{t("book.guests")}</Label>
                   <Input id="guests" type="number" min={1} max={8} value={guests} onChange={(e) => setGuests(e.target.value)} className="mt-2 h-11" />
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t("book.phone")}</Label>
                   <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+382 …" className="mt-2 h-11" />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <Label htmlFor="notes">Notes (optional)</Label>
-                  <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything we should know?" className="mt-2 h-11" />
+                  <Label htmlFor="notes">{t("book.notes")}</Label>
+                  <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("book.notesPlaceholder")} className="mt-2 h-11" />
                 </div>
 
                 <Button type="submit" disabled={loading}
                   className="sm:col-span-2 mt-2 h-12 rounded-full bg-foreground text-background hover:bg-foreground/90 text-base">
-                  {loading ? <><Loader2 className="mr-2 size-4 animate-spin" /> Sending…</> : "Send booking request"}
+                  {loading ? <><Loader2 className="mr-2 size-4 animate-spin" /> {t("book.sending")}</> : t("book.submit")}
                 </Button>
                 <p className="sm:col-span-2 text-xs text-muted-foreground text-center">
-                  No payment required to submit. The host will confirm availability.
+                  {t("book.disclaimer")}
                 </p>
               </div>
             )}

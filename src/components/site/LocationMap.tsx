@@ -1,14 +1,16 @@
 import { MapPin, Waves, Plane, Utensils } from "lucide-react";
 import { property } from "@/lib/property";
+import { useLanguage } from "@/context/LanguageContext";
 
 const highlights = [
-  { icon: Waves, label: "Beach", value: "100 m" },
-  { icon: Utensils, label: "Restaurants", value: "5 min walk" },
-  { icon: MapPin, label: "Old Bar", value: "10 min drive" },
-  { icon: Plane, label: "Tivat Airport", value: "55 min drive" },
+  { icon: Waves, labelKey: "location.beach", valueKey: "location.beachValue" },
+  { icon: Utensils, labelKey: "location.restaurants", valueKey: "location.restaurantsValue" },
+  { icon: MapPin, labelKey: "location.oldBar", valueKey: "location.oldBarValue" },
+  { icon: Plane, labelKey: "location.airport", valueKey: "location.airportValue" },
 ];
 
 export function LocationMap() {
+  const { t } = useLanguage();
   const { lat, lng } = property.coords;
   const bbox = `${lng - 0.01},${lat - 0.008},${lng + 0.01},${lat + 0.008}`;
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
@@ -19,21 +21,21 @@ export function LocationMap() {
         <div className="grid lg:grid-cols-12 gap-10 items-end mb-12">
           <div className="lg:col-span-7">
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">
-              The neighborhood
+              {t("location.eyebrow")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-balance">
-              Sutomore — quiet, southern, close to everything.
+              {t("location.title")}
             </h2>
           </div>
           <p className="lg:col-span-5 text-muted-foreground text-lg">
-            A peaceful corner of the Montenegrin coast, with the Adriatic just a short walk away.
+            {t("location.subtitle")}
           </p>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 relative overflow-hidden rounded-3xl border border-border h-[420px] md:h-[520px] bg-muted">
             <iframe
-              title="Map of Lucia's apartment in Sutomore"
+              title={t("location.mapTitle")}
               src={mapSrc}
               className="absolute inset-0 h-full w-full border-0"
               loading="lazy"
@@ -42,7 +44,7 @@ export function LocationMap() {
           <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
             {highlights.map((h) => (
               <div
-                key={h.label}
+                key={h.labelKey}
                 className="rounded-2xl border border-border bg-card p-6 flex items-center gap-4"
               >
                 <div className="rounded-xl bg-sand/30 p-3">
@@ -50,9 +52,9 @@ export function LocationMap() {
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                    {h.label}
+                    {t(h.labelKey)}
                   </div>
-                  <div className="font-display text-xl">{h.value}</div>
+                  <div className="font-display text-xl">{t(h.valueKey)}</div>
                 </div>
               </div>
             ))}
