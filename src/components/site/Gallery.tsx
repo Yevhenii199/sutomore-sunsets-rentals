@@ -3,9 +3,12 @@ import { motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { galleryImages } from "@/lib/property";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Gallery() {
   const [open, setOpen] = useState<number | null>(null);
+  const { t } = useLanguage();
+  const label = (l: string) => t(`room.${l}`);
 
   const close = () => setOpen(null);
   const prev = () =>
@@ -19,14 +22,14 @@ export function Gallery() {
         <div className="flex items-end justify-between gap-6 mb-12">
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">
-              The space
+              {t("gallery.eyebrow")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-balance max-w-2xl">
-              Every corner, thought through.
+              {t("gallery.title")}
             </h2>
           </div>
           <p className="hidden md:block max-w-sm text-muted-foreground">
-            Bright rooms, a private terrace, free parking and a fully equipped kitchen — designed for a relaxed stay.
+            {t("gallery.subtitle")}
           </p>
         </div>
 
@@ -48,13 +51,13 @@ export function Gallery() {
             >
               <img
                 src={img.src}
-                alt={img.label}
+                alt={label(img.label)}
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-graphite/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between text-background opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-sm font-medium">{img.label}</span>
+                <span className="text-sm font-medium">{label(img.label)}</span>
                 <Expand className="size-4" />
               </div>
             </motion.button>
@@ -70,32 +73,32 @@ export function Gallery() {
           <button
             onClick={(e) => { e.stopPropagation(); close(); }}
             className="absolute top-5 right-5 text-background/80 hover:text-background"
-            aria-label="Close"
+            aria-label={t("gallery.close")}
           >
             <X className="size-7" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); prev(); }}
             className="absolute left-3 md:left-8 text-background/80 hover:text-background"
-            aria-label="Previous"
+            aria-label={t("gallery.prev")}
           >
             <ChevronLeft className="size-10" />
           </button>
           <img
             src={galleryImages[open].src}
-            alt={galleryImages[open].label}
+            alt={label(galleryImages[open].label)}
             onClick={(e) => e.stopPropagation()}
             className="max-h-[88vh] max-w-[92vw] object-contain rounded-lg"
           />
           <button
             onClick={(e) => { e.stopPropagation(); next(); }}
             className="absolute right-3 md:right-8 text-background/80 hover:text-background"
-            aria-label="Next"
+            aria-label={t("gallery.next")}
           >
             <ChevronRight className="size-10" />
           </button>
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-background/80 text-sm">
-            {galleryImages[open].label} — {open + 1} / {galleryImages.length}
+            {label(galleryImages[open].label)} — {open + 1} / {galleryImages.length}
           </div>
         </div>
       )}
